@@ -1,0 +1,74 @@
+Gameboxd Native
+Gameboxd é uma aplicação móvel desenvolvida em React Native (inspirada no Letterboxd), voltada para gamers organizarem as suas jogatinas, registrarem opiniões e gerenciarem sua lista de jogos desejados.
+
+Visão Geral e Requisitos
+Tema e Objetivos
+O projeto foi desenvolvido para a disciplina CCP150 - Desenvolvimento de Aplicativos Móveis (FEI), oferecendo aos jogadores uma interface simples, moderna e responsiva para organizar e acompanhar seus títulos em andamento.
+
+Requisitos do Projeto
+Navegação entre 6+ telas distintas (Home, Detalhes, Formulário de Avaliação, Diário, Quero Jogar e Perfil).
+
+Navegação realizada com React Navigation (Stack e Bottom Tabs).
+
+Autenticação de Usuários: Cadastro, login e sessão individualizada para cada utilizador.
+
+CRUD de Diário: Criação, leitura, edição e exclusão de resenhas com notas (1 a 5 estrelas) e status de conclusão.
+
+Gerenciamento de Backlog: Adição e remoção de títulos na lista "Quero Jogar".
+
+Armazenamento em Banco de Dados: Firebase Cloud Firestore com fallback local rápido usando AsyncStorage.
+
+Atuador Móvel: Resposta háptica via expo-haptics.
+
+Interface Responsiva: Adaptação dinâmica para dispositivos móveis e desktop.
+
+Tecnologias Utilizadas
+React Native: Framework principal para o desenvolvimento móvel.
+
+Expo: Plataforma para compilação, execução e testes.
+
+JavaScript (ES6+): Lógica da aplicação e gestão de dados.
+
+React Navigation: Gestão de rotas e abas de navegação.
+
+Firebase (Firestore & Auth): Autenticação de contas e banco de dados na nuvem.
+
+AsyncStorage: Persistência de dados local para funcionamento offline.
+
+Expo Haptics: Integração com o motor de vibração do dispositivo.
+
+Funcionalidades
+Sistema de Autenticação Local & Firebase: Login e cadastro com validação de credenciais e persistência de sessão.
+
+Home: Exibição de cards de jogos com capa, título, ano e nota média, além de mensagem de boas-vindas personalizada.
+
+Tela de Detalhes do Jogo: Informações aprofundadas sobre o título e atalhos para favoritar, adicionar ao backlog ou avaliar.
+
+Formulário de Avaliação: Atribuição de notas (1 a 5 estrelas), seleção de status (Zerado, Jogando, Abandonado) e escrita de resenhas.
+
+Meu Diário: Listagem das avaliações do usuário com opções diretas para editar ou excluir registros.
+
+Lista Quero Jogar (Backlog): Fila de jogos salvos com ação rápida para direcionar ao formulário de avaliação.
+
+Perfil do Usuário: Edição do perfil, estatísticas de jogos e logout seguro.
+
+Uso Ético de IA: Utilização de LLMs para auxílio na responsividade dos estilos e suporte no tratamento de exceções de rede.
+
+Demonstração
+https://youtu.be/5mW1zo8gaoM
+
+Instalação e Execução
+Para rodar o projeto localmente na sua máquina, siga os passos abaixo:
+
+Passo a Passo
+Clonar o repositório:
+git clone https://github.com/murilocaetanos4/Projeto-Aplicativos-Moveisf.git
+
+Acessar a pasta do projeto:
+cd Projeto-Aplicativos-Moveisf
+
+Instalar as dependências:
+npm install
+
+Executar a aplicação:
+npx expo start
