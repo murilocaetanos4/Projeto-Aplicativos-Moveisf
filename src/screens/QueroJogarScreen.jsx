@@ -9,6 +9,7 @@ import {
   SafeAreaView,
   Alert,
   StatusBar,
+  Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
@@ -57,9 +58,22 @@ export default class QueroJogarScreen extends Component {
     }
   };
 
-  // Abre a janela de confirmação perguntando se quer remover o jogo da lista
+  // Abre a janela de confirmação tratando Mobile vs Web
   confirmarRemocao = (id, titulo) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (Platform.OS !== 'web') {
+      try { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); } catch (e) {}
+    }
+
+    // Se estiver a rodar no navegador Web, usa a caixa de confirmação nativa do browser
+    if (typeof window !== 'undefined' && window.confirm) {
+      const confirmou = window.confirm(`Desejas remover "${titulo}" da tua lista Quero Jogar?`);
+      if (confirmou) {
+        this.executarRemocao(id);
+      }
+      return;
+    }
+
+    // Se estiver no telemóvel (Android/iOS), usa o Alert nativo
     Alert.alert(
       'Remover da Lista',
       `Desejas remover "${titulo}" da tua lista Quero Jogar?`,
@@ -74,14 +88,20 @@ export default class QueroJogarScreen extends Component {
     );
   };
 
-  // Remove o jogo do array e atualiza o AsyncStorage
+  // Remove o jogo comparando IDs convertidos para String
   executarRemocao = async (id) => {
     try {
       const key = await this.getStorageKey();
-      const novoBacklog = this.state.backlog.filter((item) => item.id !== id);
+      
+      // Converte ambos para String para garantir a remoção exata (evita falha entre 1 e "1")
+      const novoBacklog = this.state.backlog.filter((item) => String(item.id) !== String(id));
+      
       await AsyncStorage.setItem(key, JSON.stringify(novoBacklog));
       this.setState({ backlog: novoBacklog });
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+      if (Platform.OS !== 'web') {
+        try { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch (e) {}
+      }
     } catch (error) {
       Alert.alert('Erro', 'Não foi possível remover o jogo da lista.');
     }
@@ -89,7 +109,9 @@ export default class QueroJogarScreen extends Component {
 
   // Redireciona para o formulário de avaliação
   irParaAvaliacao = (jogo) => {
-    Haptics.selectionAsync();
+    if (Platform.OS !== 'web') {
+      try { Haptics.selectionAsync(); } catch (e) {}
+    }
     this.props.navigation.navigate('FormAvaliacao', { jogo });
   };
 
@@ -151,7 +173,9 @@ export default class QueroJogarScreen extends Component {
             <TouchableOpacity
               style={styles.btnExplorar}
               onPress={() => {
-                Haptics.selectionAsync();
+                if (Platform.OS !== 'web') {
+                  try { Haptics.selectionAsync(); } catch (e) {}
+                }
                 navigation.navigate('Home');
               }}
             >
@@ -161,7 +185,7 @@ export default class QueroJogarScreen extends Component {
         ) : (
           <FlatList
             data={backlog}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item) => String(item.id)}
             renderItem={this.renderItemBacklog}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}

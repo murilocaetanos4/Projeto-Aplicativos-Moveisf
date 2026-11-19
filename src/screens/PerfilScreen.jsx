@@ -9,6 +9,7 @@ import {
   ScrollView,
   Alert,
   StatusBar,
+  Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
@@ -76,14 +77,12 @@ export default class PerfilScreen extends Component {
     }
 
     try {
-      // 1. Copia as listas antigas para as novas chaves com o novo nome
       const diarioAntigo = (await AsyncStorage.getItem(`@gameboxd_diario_${nomeUsuario}`)) || '[]';
       const backlogAntigo = (await AsyncStorage.getItem(`@gameboxd_backlog_${nomeUsuario}`)) || '[]';
 
       await AsyncStorage.setItem(`@gameboxd_diario_${nomeLimpo}`, diarioAntigo);
       await AsyncStorage.setItem(`@gameboxd_backlog_${nomeLimpo}`, backlogAntigo);
 
-      // 2. Atualiza o cadastro da conta no @gameboxd_accounts
       const contasSalvas = await AsyncStorage.getItem('@gameboxd_accounts');
       let contas = contasSalvas ? JSON.parse(contasSalvas) : {};
       
@@ -94,26 +93,67 @@ export default class PerfilScreen extends Component {
       });
       await AsyncStorage.setItem('@gameboxd_accounts', JSON.stringify(contas));
 
-      // 3. Atualiza o utilizador logado atual
       await AsyncStorage.setItem('@gameboxd_user', nomeLimpo);
 
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      if (Platform.OS !== 'web') {
+        try { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch (e) {}
+      }
 
       this.setState({
         nomeUsuario: nomeLimpo,
         editandoNome: false,
       });
 
-      Alert.alert('Perfil Atualizado! 👤', 'O teu nome de utilizador foi alterado com sucesso!');
+      if (Platform.OS === 'web') {
+        window.alert('O teu nome de utilizador foi alterado com sucesso!');
+      } else {
+        Alert.alert('Perfil Atualizado! 👤', 'O teu nome de utilizador foi alterado com sucesso!');
+      }
     } catch (error) {
       Alert.alert('Erro', 'Não foi possível atualizar o nome de utilizador.');
     }
   };
 
-  // Solicita confirmação via Alert nativo antes de fazer o logout
-  handleLogout = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  // Função de logout que limpa os dados e redireciona para o Login
+  executarLogout = async () => {
+    try {
+      await AsyncStorage.removeItem('@gameboxd_user');
+      
+      if (Platform.OS !== 'web') {
+        try { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch (e) {}
+      }
 
+      // Tenta resetar o histórico de navegação para a tela de Login
+      const { navigation } = this.props;
+      if (navigation.reset) {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Login' }],
+        });
+      } else {
+        navigation.replace('Login');
+      }
+    } catch (error) {
+      console.log('Erro ao encerrar a sessão:', error);
+    }
+  };
+
+  // Solicita confirmação adaptada para Web e Mobile
+  handleLogout = () => {
+    if (Platform.OS !== 'web') {
+      try { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); } catch (e) {}
+    }
+
+    // Se estiver a correr no navegador Web, usa o confirm nativo do browser
+    if (typeof window !== 'undefined' && window.confirm) {
+      const confirmou = window.confirm('Tens a certeza de que desejas encerrar a sessão?');
+      if (confirmou) {
+        this.executarLogout();
+      }
+      return;
+    }
+
+    // Se estiver no Android / iOS, usa o Alert nativo do React Native
     Alert.alert(
       'Sair da Conta',
       'Tens a certeza de que desejas encerrar a sessão?',
@@ -122,15 +162,7 @@ export default class PerfilScreen extends Component {
         {
           text: 'Encerrar Sessão',
           style: 'destructive',
-          onPress: async () => {
-            try {
-              await AsyncStorage.removeItem('@gameboxd_user');
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              this.props.navigation.replace('Login');
-            } catch (error) {
-              console.log('Erro ao encerrar a sessão:', error);
-            }
-          },
+          onPress: () => this.executarLogout(),
         },
       ]
     );
@@ -154,14 +186,15 @@ export default class PerfilScreen extends Component {
           <View style={styles.cardPerfil}>
             <Text style={styles.avatarIcon}>👤</Text>
 
-            {/* Alterna entre o modo de visualização do nome e o modo de edição */}
             {!editandoNome ? (
               <View style={styles.nomeContainer}>
                 <Text style={styles.nomeTitulo}>{nomeUsuario}</Text>
                 <TouchableOpacity
                   style={styles.btnEditarNome}
                   onPress={() => {
-                    Haptics.selectionAsync();
+                    if (Platform.OS !== 'web') {
+                      try { Haptics.selectionAsync(); } catch (e) {}
+                    }
                     this.setState({ editandoNome: true });
                   }}
                 >
@@ -196,12 +229,13 @@ export default class PerfilScreen extends Component {
               </View>
             )}
 
-            {/* Quadro de estatísticas rápidas */}
             <View style={styles.gridEstatisticas}>
               <TouchableOpacity
                 style={styles.cardStat}
                 onPress={() => {
-                  Haptics.selectionAsync();
+                  if (Platform.OS !== 'web') {
+                    try { Haptics.selectionAsync(); } catch (e) {}
+                  }
                   navigation.navigate('Diario');
                 }}
               >
@@ -212,7 +246,9 @@ export default class PerfilScreen extends Component {
               <TouchableOpacity
                 style={styles.cardStat}
                 onPress={() => {
-                  Haptics.selectionAsync();
+                  if (Platform.OS !== 'web') {
+                    try { Haptics.selectionAsync(); } catch (e) {}
+                  }
                   navigation.navigate('QueroJogar');
                 }}
               >
@@ -221,7 +257,6 @@ export default class PerfilScreen extends Component {
               </TouchableOpacity>
             </View>
 
-            {/* Botão para encerrar a sessão */}
             <TouchableOpacity style={styles.btnEncerrarSessao} onPress={this.handleLogout}>
               <Text style={styles.btnEncerrarSessaoTexto}>🚪 Encerrar Sessão</Text>
             </TouchableOpacity>
@@ -239,7 +274,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
-    justifyContent: 'center',
+    justify: 'center',
   },
   cardPerfil: {
     backgroundColor: '#1e232a',
